@@ -1,0 +1,12 @@
+# virtual environment
+.venv/
+
+# secrets
+.env
+
+# data
+data/raw/
+data/processed/
+
+# notebooks
+.ipynb_checkpoints/
