@@ -1,70 +1,65 @@
-import openmeteo_requests
 import pandas as pd
-import requests_cache
-from retry_requests import retry
+import requests
 from datetime import datetime
-from pathlib import Path
 
-# -----------------------------
-# Setup API client
-# -----------------------------
-cache_session = requests_cache.CachedSession(
-    ".cache", expire_after=3600
-)
-retry_session = retry(
-    cache_session, retries=5, backoff_factor=0.2
-)
+from config import LOCATIONS, RAW_PATH, OPENMETEO_URL, HOURLY_VARIABLES
 
-openmeteo = openmeteo_requests.Client(session=retry_session)
 
-# -----------------------------
-# API request
-# -----------------------------
-url = "https://api.open-meteo.com/v1/forecast"
-params = {
-    "latitude": 51.5074,      # London
-    "longitude": -0.1278,
-    "hourly": "temperature_2m,relative_humidity_2m",
-    "timezone": "Europe/London"
-}
+def fetch_location(location: dict[str, str | float]) -> pd.DataFrame:
+    """Fetch weather data for a single location from Open-Meteo API."""
+    params: dict[str, str | float] = {
+        "latitude": location["latitude"],
+        "longitude": location["longitude"],
+        "hourly": ",".join(HOURLY_VARIABLES),
+        "timezone": location["timezone"],
+    }
 
-responses = openmeteo.weather_api(url, params=params)
-response = responses[0]
+    response = requests.get(OPENMETEO_URL, params=params)
+    response.raise_for_status()
+    data = response.json()
 
-# -----------------------------
-# Extract hourly data
-# -----------------------------
-hourly = response.Hourly()
+    df = pd.DataFrame({
+        "datetime": data["hourly"]["time"],
+        **{var: data["hourly"][var] for var in HOURLY_VARIABLES}
+    })
 
-temperature = hourly.Variables(0).ValuesAsNumpy()
-humidity = hourly.Variables(1).ValuesAsNumpy()
+    df["location"] = location["name"]
+    df["country"] = location["country"]
 
-dates = pd.date_range(
-    start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
-    end=pd.to_datetime(hourly.TimeEnd(), unit="s", utc=True),
-    freq=pd.Timedelta(seconds=hourly.Interval()),
-    inclusive="left"
-)
+    return df
 
-df = pd.DataFrame({
-    "datetime": dates,
-    "temperature_c": temperature,
-    "humidity_pct": humidity
-})
 
-df["run_date"] = datetime.today().date()
+def main():
+    """Fetch weather for all locations and save to raw."""
+    
+    # Ensure output folder exists
+    RAW_PATH.mkdir(parents=True, exist_ok=True)
+    
+    # Fetch all locations
+    all_data = []
+    
+    for location in LOCATIONS:
+        print(f"Fetching: {location['name']}, {location['country']}")
+        df = fetch_location(location)
+        all_data.append(df) # type: ignore[call-overload]
+    
+    # Combine all locations
+    combined = pd.concat(all_data, ignore_index=True) # type: ignore[call-overload]
+    
+    # Add metadata
+    combined["run_date"] = datetime.today().date()
+    combined["run_timestamp"] = datetime.now()
+    
+    # Save raw data (overwrites each run)
+    output_file = RAW_PATH / "weather_live.csv"
+    combined.to_csv(output_file, index=False)
+    
+    print(f"Raw weather data saved: {combined.shape}")
+    print(f"Locations: {combined['location'].unique().tolist()}")
+    print(f"Date range: {combined['datetime'].min()} to {combined['datetime'].max()}")
+    
+    return combined
 
-# -----------------------------
-# Save raw data
-# -----------------------------
-output_path = Path("data/raw")
-output_path.mkdir(parents=True, exist_ok=True)
-
-df.to_csv(
-    output_path / "weather_live.csv",
-    index=False
-)
 
 if __name__ == "__main__":
-    print("Raw weather data saved:", df.shape)
-
+    main()
