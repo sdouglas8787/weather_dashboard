@@ -10,3 +10,6 @@ data/processed/
 
 # notebooks
 .ipynb_checkpoints/
+
+.cache*
+cache.sqlite
