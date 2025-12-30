@@ -17,7 +17,7 @@ A Python-based weather data pipeline that fetches, processes, and prepares hourl
 pip install -r requirements.txt
 
 # 2. Open the notebook
-jupyter notebook notebooks/03_data_pipeline.ipynb
+jupyter notebook notebooks/01_data_pipeline.ipynb
 
 # 3. Run the cells:
 # Cell 1: Fetch today's 7-day forecast
@@ -51,7 +51,7 @@ weather-dashboard/
 │   ├── fetch_weather.py            # API fetching functions
 │   └── clean_weather.py            # Processing & cleaning
 ├── notebooks/
-│   └── 03_data_pipeline.ipynb      # Main workflow (3 cells)
+│   └── 01_data_pipeline.ipynb      # Main workflow (3 cells)
 ├── README.md                       # This file
 ├── WORKFLOW.md                     # Detailed process documentation
 └── requirements.txt                # Python dependencies
