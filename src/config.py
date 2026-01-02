@@ -3,6 +3,7 @@ from pathlib import Path
 # -----------------------------
 # Paths
 # -----------------------------
+
 # Get the project root directory (one level up from src/)
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 RAW_PATH = (PROJECT_ROOT / "data" / "raw").resolve()
@@ -11,8 +12,10 @@ PROCESSED_PATH = (PROJECT_ROOT / "data" / "processed").resolve()
 # -----------------------------
 # Locations
 # -----------------------------
+
 # Add more locations as needed
 # Find coordinates: https://www.latlong.net/
+
 LOCATIONS: list[dict[str, str | float]] = [
     {
         "name": "London",
@@ -59,6 +62,7 @@ OPENMETEO_HISTORICAL_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 # Variables to fetch (hourly granularity)
 # See full list: https://open-meteo.com/en/docs
+
 HOURLY_VARIABLES = [
     # Temperature
     "temperature_2m",              # Actual temperature (°C)
@@ -82,3 +86,4 @@ HOURLY_VARIABLES = [
     "cloudcover",                # Cloud cover (%)
     "weathercode",               # WMO weather condition code
 ]
+
